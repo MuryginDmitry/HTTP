@@ -46,16 +46,23 @@ class Server {
                 return;
             }
 
-            final var path = parts[1];
-            if (!validPaths.contains(path)) {
+            final var method = parts[0];
+            final var pathWithQuery = parts[1];
+            final var queryStart = pathWithQuery.indexOf('?');
+            final var path = (queryStart != -1) ? pathWithQuery.substring(0, queryStart) : pathWithQuery;
+            final var queryString = (queryStart != -1) ? pathWithQuery.substring(queryStart + 1) : "";
+
+            final var request = new Request(method, path, queryString);
+
+            if (!validPaths.contains(request.getPath())) {
                 sendNotFoundResponse(out);
                 return;
             }
 
-            final var filePath = Path.of(".", "public", path);
+            final var filePath = Path.of(".", "public", request.getPath());
             final var mimeType = Files.probeContentType(filePath);
 
-            if (path.equals("/classic.html")) {
+            if (request.getPath().equals("/classic.html")) {
                 handleClassicHtmlRequest(out, filePath, mimeType);
             } else {
                 handleRegularRequest(out, filePath, mimeType);
